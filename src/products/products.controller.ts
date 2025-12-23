@@ -13,6 +13,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminGuard } from '../auth/admin.guard';
+import { EventPattern, Payload } from '@nestjs/microservices';
 
 @Controller('products')
 export class ProductsController {
@@ -50,5 +51,12 @@ export class ProductsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
+  }
+
+  @EventPattern('order_created')
+  async handleOrderCreated(@Payload() order: any) {
+    console.log('📦 Commande reçue via RabbitMQ :', order);
+    // On appelle le service pour mettre à jour le stock
+    await this.productsService.handleOrderCreated(order);
   }
 }

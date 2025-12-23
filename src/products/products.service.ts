@@ -37,4 +37,26 @@ export class ProductsService {
       where: { id },
     });
   }
+
+  async handleOrderCreated(order: any) {
+    // order.items contient la liste des produits achetés
+    for (const item of order.items) {
+      console.log(
+        `Mise à jour stock pour produit ${item.productId} (-${item.quantity})`,
+      );
+
+      try {
+        await this.prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              decrement: item.quantity, // Magie Prisma : stock = stock - quantity
+            },
+          },
+        });
+      } catch (error) {
+        console.error(`Erreur maj stock produit ${item.productId}`, error);
+      }
+    }
+  }
 }
