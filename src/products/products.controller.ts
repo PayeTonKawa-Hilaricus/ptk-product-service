@@ -14,7 +14,10 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminGuard } from '../auth/admin.guard';
 import { EventPattern, Payload } from '@nestjs/microservices';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('products') 
+@ApiBearerAuth()     
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
