@@ -37,4 +37,7 @@ async function bootstrap() {
   await app.startAllMicroservices();
   await app.listen(3000);
 }
-bootstrap();
+void bootstrap().catch((err) => {
+  console.error('Error during bootstrap:', err);
+  process.exit(1);
+});

@@ -3,6 +3,15 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from '../prisma.service';
 
+interface OrderItem {
+  productId: string;
+  quantity: number;
+}
+
+interface OrderPayload {
+  items: OrderItem[];
+}
+
 @Injectable()
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
@@ -38,24 +47,23 @@ export class ProductsService {
     });
   }
 
-  async handleOrderCreated(order: any) {
-    // order.items contient la liste des produits achetés
-    for (const item of order.items) {
-      console.log(
-        `Mise à jour stock pour produit ${item.productId} (-${item.quantity})`,
-      );
+  async handleOrderCreated(order: OrderPayload) {
+    // On remplace 'any' par 'OrderPayload'
+    console.log('Traitement de la commande pour mise à jour stock:', order);
 
-      try {
+    for (const item of order.items) {
+      const product = await this.prisma.product.findUnique({
+        where: { id: item.productId },
+      });
+
+      if (product) {
         await this.prisma.product.update({
           where: { id: item.productId },
           data: {
-            stock: {
-              decrement: item.quantity, // Magie Prisma : stock = stock - quantity
-            },
+            stock: product.stock - item.quantity,
           },
         });
-      } catch (error) {
-        console.error(`Erreur maj stock produit ${item.productId}`, error);
+        console.log(`Stock mis à jour pour produit ${item.productId}`);
       }
     }
   }

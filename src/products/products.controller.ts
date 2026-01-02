@@ -16,6 +16,14 @@ import { AdminGuard } from '../auth/admin.guard';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+export interface OrderItem {
+  productId: string;
+  quantity: number;
+}
+export interface OrderPayload {
+  items: OrderItem[];
+}
+
 @ApiTags('products')
 @ApiBearerAuth()
 @Controller('products')
@@ -55,11 +63,9 @@ export class ProductsController {
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
-
   @EventPattern('order_created')
-  async handleOrderCreated(@Payload() order: any) {
+  async handleOrderCreated(@Payload() order: OrderPayload) {
     console.log('📦 Commande reçue via RabbitMQ :', order);
-    // On appelle le service pour mettre à jour le stock
     await this.productsService.handleOrderCreated(order);
   }
 }
