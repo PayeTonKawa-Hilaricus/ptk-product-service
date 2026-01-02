@@ -99,11 +99,9 @@ jobs:
       - name: 🔗 Integration Tests (E2E)
         run: npm run test:e2e
         env:
-          DATABASE_HOST: localhost
-          DATABASE_PORT: 5432
-          DATABASE_USER: test_user
-          DATABASE_PASSWORD: test_password
-          DATABASE_NAME: test_db
+          # Prisma a besoin de TOUT en une seule ligne :
+          # postgresql://USER:PASSWORD@HOST:PORT/DB_NAME?schema=public
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db?schema=public
 
       # 3. Contract Testing (Pact)
       # Note: Ne s'exécute que si le script existe dans package.json
