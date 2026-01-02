@@ -20,7 +20,10 @@ describe('ProductsController (e2e)', () => {
     await app.close();
   });
 
-  it('/products (GET) should return 200', () => {
-    return request(app.getHttpServer()).get('/products').expect(200);
+
+  it('/products (GET) should be protected and return 401', () => {
+    return request(app.getHttpServer())
+      .get('/products')
+      .expect(401); 
   });
 });
