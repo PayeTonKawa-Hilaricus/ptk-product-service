@@ -25,7 +25,7 @@ describe('AdminGuard', () => {
     expect(guard.canActivate(context)).toBe(true);
   });
 
-  it('devrait retourner FALSE si le user n\'est pas ADMIN', () => {
+  it("devrait retourner FALSE si le user n'est pas ADMIN", () => {
     // On simule un contexte avec un utilisateur USER lambda
     const context = {
       switchToHttp: () => ({
