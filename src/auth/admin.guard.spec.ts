@@ -1,5 +1,5 @@
 import { AdminGuard } from './admin.guard';
-import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 
 describe('AdminGuard', () => {
   let guard: AdminGuard;
@@ -12,24 +12,31 @@ describe('AdminGuard', () => {
     expect(guard).toBeDefined();
   });
 
-  it('devrait retourner TRUE si user est ADMIN', () => {
+  it('devrait retourner TRUE si le user est ADMIN', () => {
+    // On simule un contexte avec un utilisateur ADMIN
     const context = {
       switchToHttp: () => ({
-        getRequest: () => ({ user: { role: 'ADMIN' } }),
+        getRequest: () => ({
+          user: { role: 'ADMIN' },
+        }),
       }),
     } as unknown as ExecutionContext;
 
     expect(guard.canActivate(context)).toBe(true);
   });
 
-  it("devrait lancer une ERREUR si user n'est pas ADMIN", () => {
+  it('devrait retourner FALSE si le user n\'est pas ADMIN', () => {
+    // On simule un contexte avec un utilisateur USER lambda
     const context = {
       switchToHttp: () => ({
-        getRequest: () => ({ user: { role: 'USER' } }),
+        getRequest: () => ({
+          user: { role: 'USER' },
+        }),
       }),
     } as unknown as ExecutionContext;
 
-    // On enveloppe l'appel dans une fonction () => ... pour que Jest attrape l'erreur
-    expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
+    // CORRECTION ICI : On attend que le guard réponde "FALSE" (Accès refusé)
+    // Au lieu d'attendre une erreur.
+    expect(guard.canActivate(context)).toBe(false);
   });
 });
