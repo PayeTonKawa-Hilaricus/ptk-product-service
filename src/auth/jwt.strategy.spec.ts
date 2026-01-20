@@ -24,7 +24,6 @@ describe('JwtStrategy', () => {
   it('validate renvoie le payload', () => {
     const payload = { sub: 'u1', email: 'e@e.com', role: 'ADMIN' };
 
-    // On retire le 'await' ici
     expect(strategy.validate(payload)).toEqual({
       userId: 'u1',
       email: 'e@e.com',

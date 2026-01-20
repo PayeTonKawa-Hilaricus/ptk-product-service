@@ -20,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // On enlève 'async' car on ne fait pas d'appel asynchrone ici
+  // Méthode appelée une fois le token validé
   validate(payload: JwtPayload) {
     return {
       userId: payload.sub,
