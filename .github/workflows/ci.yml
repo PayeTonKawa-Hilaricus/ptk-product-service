@@ -174,7 +174,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🔄 Update & Restart Service
-        shell: pwsh
+        shell: powershell
         run: |
           # --- CONFIGURATION ---
           $ROOT = "C:\PayeTonKawa"
