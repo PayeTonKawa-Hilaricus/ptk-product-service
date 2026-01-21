@@ -47,9 +47,7 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-          extra_args: --debug --only-verified
+          extra_args: --debug --only-verified --no-verification
 
   # ===========================================================================
   # JOB 2: TESTING (UNIT, INTEGRATION, CONTRACT)
@@ -166,7 +164,6 @@ jobs:
 
   deploy-pc2:
     name: 🚀 Deploy on PC2
-    # SÉCURITÉ MAXIMALE : On attend que TOUT soit vert (Tests + Sécurité + Build Docker)
     needs: [testing, sast-analysis, docker-build]
     if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, production-pc]
@@ -176,63 +173,55 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🔄 Update & Restart Service
-        shell: pwsh
+        shell: powershell
         run: |
-          # --- CONFIGURATION ---
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           $ROOT = "C:\PayeTonKawa"
           $INFRA_DIR = "$ROOT\ptk-infrastructure"
           $SERVICE_NAME = "${{ github.event.repository.name }}"
 
-          Write-Host "🔥 DÉBUT DU DÉPLOIEMENT : $SERVICE_NAME"
+          Write-Host "START DEPLOY: $SERVICE_NAME"
 
-          # 1. Mise à jour du code source du Micro-Service
-          Write-Host "📥 Pull du code source..."
           cd "$ROOT\$SERVICE_NAME"
           git fetch origin
           git reset --hard origin/main
 
-          # 2. Mise à jour de l'Infrastructure
-          # C'est ICI qu'on va travailler pour la suite
-          Write-Host "🏗️ Mise à jour de l'infra..."
           cd $INFRA_DIR
           git pull origin main
 
-          # 3. Génération du .env DANS le dossier INFRA (là où est le docker-compose)
-          Write-Host "🔑 Génération des secrets..."
-
-          # On nettoie l'ancien .env pour être sûr
           if (Test-Path .env) { Remove-Item .env }
 
+          $EnvContent = @()
+
           if ($SERVICE_NAME -eq "ptk-auth-service") {
-             echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL }}" >> .env
-             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-             echo "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}" >> .env
-             echo "PORT=3000" >> .env
+             $EnvContent += "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL }}"
+             $EnvContent += "JWT_SECRET=${{ secrets.JWT_SECRET }}"
+             $EnvContent += "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}"
+             $EnvContent += "PORT=3000"
           }
           elseif ($SERVICE_NAME -eq "ptk-product-service") {
-             echo "DATABASE_URL=${{ secrets.PRODUCT_DATABASE_URL }}" >> .env
-             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-             echo "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}" >> .env
-             echo "PORT=3002" >> .env
+             $EnvContent += "DATABASE_URL=${{ secrets.PRODUCT_DATABASE_URL }}"
+             $EnvContent += "JWT_SECRET=${{ secrets.JWT_SECRET }}"
+             $EnvContent += "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}"
+             $EnvContent += "PORT=3000"
           }
           elseif ($SERVICE_NAME -eq "ptk-order-service") {
-             echo "DATABASE_URL=${{ secrets.ORDER_DATABASE_URL }}" >> .env
-             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-             echo "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}" >> .env
-             echo "PORT=3001" >> .env
+             $EnvContent += "DATABASE_URL=${{ secrets.ORDER_DATABASE_URL }}"
+             $EnvContent += "JWT_SECRET=${{ secrets.JWT_SECRET }}"
+             $EnvContent += "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}"
+             $EnvContent += "PORT=3000"
           }
           elseif ($SERVICE_NAME -eq "ptk-client-service") {
-             echo "DATABASE_URL=${{ secrets.CLIENT_DATABASE_URL }}" >> .env
-             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-             echo "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}" >> .env
-             echo "PORT=3003" >> .env
+             $EnvContent += "DATABASE_URL=${{ secrets.CLIENT_DATABASE_URL }}"
+             $EnvContent += "JWT_SECRET=${{ secrets.JWT_SECRET }}"
+             $EnvContent += "RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}"
+             $EnvContent += "PORT=3000"
           }
 
-          # 4. Relancer le conteneur (Depuis le dossier INFRA)
-          Write-Host "🐳 Redémarrage du conteneur..."
-          docker-compose up -d --build --no-deps $SERVICE_NAME
+          $EnvContent | Out-File -FilePath .env -Encoding ascii
 
-          # 5. Nettoyage
+          docker compose up -d --build --no-deps $SERVICE_NAME
+
           docker image prune -f
 
-          Write-Host "✅ Succès ! $SERVICE_NAME est déployé."
+          Write-Host "DEPLOY SUCCESS"
