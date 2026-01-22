@@ -32,7 +32,7 @@ async function bootstrap() {
       },
     },
   });
-
+  app.enableCors();
   // 3. On démarre tout (HTTP + Microservice)
   await app.startAllMicroservices();
   await app.listen(3000);
